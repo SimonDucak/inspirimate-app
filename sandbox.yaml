@@ -1,17 +1,9 @@
 version: 1
 web:
-  command: |
-    if [ ! -x "$HOME/flutter/bin/flutter" ]; then
-      rm -rf "$HOME/flutter"
-      cp -a /opt/flutter "$HOME/flutter"
-    fi
-    export PATH="$HOME/flutter/bin:$PATH"
-    export PUB_CACHE="$HOME/.pub-cache"
-    export FLUTTER_SUPPRESS_ANALYTICS=true
-    export CI=true
-    flutter run -d web-server --web-hostname 0.0.0.0 --web-port 3000
+  command: "bash scripts/flutter.sh serve"
   port: 3000
   health_path: /
   restart_after_task: true
 build:
-  command: ""
+  command: "bash scripts/flutter.sh build"
+  timeout_seconds: 900
