@@ -11,7 +11,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Potravinový denník'), findsOneWidget);
+    expect(find.text('Mosuda'), findsOneWidget);
     expect(find.text('E-mail'), findsOneWidget);
     expect(find.text('Heslo'), findsOneWidget);
     expect(find.text('Prihlásiť sa'), findsOneWidget);

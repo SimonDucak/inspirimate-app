@@ -1,11 +1,11 @@
 {
-    "name": "client_app",
-    "short_name": "client_app",
+    "name": "Mosuda",
+    "short_name": "Mosuda",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#080D0C",
+    "theme_color": "#38D1BF",
+    "description": "Mosuda – váš denník výživy a tréningu.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

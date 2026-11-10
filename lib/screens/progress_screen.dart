@@ -24,15 +24,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
   final _measurements = {
     for (final key in _fields.keys) key: TextEditingController(),
   };
-  final _nutritionGoal = TextEditingController();
-  final _trainingGoal = TextEditingController();
   final _notes = TextEditingController();
   DateTime _date = DateUtils.dateOnly(DateTime.now());
   List<Map<String, dynamic>> _history = [];
   String _chartField = 'weight_kg';
-  bool _nutritionDone = false;
-  bool _trainingDone = false;
-  int? _motivation, _energy, _mood;
+  List<Map<String, dynamic>> _habits = [];
+  final Map<String, bool> _habitCheckins = {};
+  final Map<String, int> _habitHistory = {};
+  int? _motivation, _energy, _sleepQuality;
   bool _loading = true, _saving = false;
 
   SupabaseClient get _db => Supabase.instance.client;
@@ -50,8 +49,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
     for (final controller in _measurements.values) {
       controller.dispose();
     }
-    _nutritionGoal.dispose();
-    _trainingGoal.dispose();
     _notes.dispose();
     super.dispose();
   }
@@ -70,11 +67,31 @@ class _ProgressScreenState extends State<ProgressScreen> {
       final checkin = await _db
           .from('client_daily_checkins')
           .select(
-            'nutrition_goal,nutrition_completed,training_goal,training_completed,motivation,energy,mood,notes',
+            'nutrition_goal,nutrition_completed,training_goal,training_completed,motivation,energy,sleep_quality,notes',
           )
           .eq('user_id', _userId)
           .eq('checkin_date', _dateKey)
           .maybeSingle();
+      final habitRows = await _db
+          .from('client_habits')
+          .select(
+            'id,category,title,repeat_mode,scheduled_for,created_at,ended_on,is_active',
+          )
+          .eq('user_id', _userId);
+      final habitCheckinRows = await _db
+          .from('client_habit_checkins')
+          .select('habit_id,completed')
+          .eq('user_id', _userId)
+          .eq('checkin_date', _dateKey);
+      final today = DateUtils.dateOnly(DateTime.now());
+      final historyStart = today.subtract(const Duration(days: 29));
+      final habitHistoryRows = await _db
+          .from('client_habit_checkins')
+          .select('habit_id,completed')
+          .eq('user_id', _userId)
+          .eq('completed', true)
+          .gte('checkin_date', _dateString(historyStart))
+          .lte('checkin_date', _dateString(today));
       final history = await _db
           .from('client_body_measurements')
           .select(
@@ -90,14 +107,38 @@ class _ProgressScreenState extends State<ProgressScreen> {
             ? ''
             : _number((value as num).toDouble());
       }
-      _nutritionGoal.text = checkin?['nutrition_goal'] as String? ?? '';
-      _trainingGoal.text = checkin?['training_goal'] as String? ?? '';
       _notes.text = checkin?['notes'] as String? ?? '';
-      _nutritionDone = checkin?['nutrition_completed'] as bool? ?? false;
-      _trainingDone = checkin?['training_completed'] as bool? ?? false;
+      final date = DateTime.parse(_dateKey);
+      _habits = habitRows.map((row) => Map<String, dynamic>.from(row)).where((
+        habit,
+      ) {
+        final mode = habit['repeat_mode'] as String;
+        if (mode == 'daily') {
+          return habit['is_active'] == true &&
+              habit['scheduled_for'] == _dateKey;
+        }
+        final starts = DateTime.parse(habit['created_at'] as String);
+        final startDate = DateUtils.dateOnly(starts.toLocal());
+        final endedOn = habit['ended_on'] as String?;
+        return !startDate.isAfter(date) &&
+            (endedOn == null || !DateTime.parse(endedOn).isBefore(date));
+      }).toList();
+      _habitCheckins
+        ..clear()
+        ..addEntries(
+          habitCheckinRows.map(
+            (row) =>
+                MapEntry(row['habit_id'] as String, row['completed'] as bool),
+          ),
+        );
+      _habitHistory.clear();
+      for (final row in habitHistoryRows) {
+        final id = row['habit_id'] as String;
+        _habitHistory[id] = (_habitHistory[id] ?? 0) + 1;
+      }
       _motivation = checkin?['motivation'] as int?;
       _energy = checkin?['energy'] as int?;
-      _mood = checkin?['mood'] as int?;
+      _sleepQuality = checkin?['sleep_quality'] as int?;
       _history = history
           .map((row) => Map<String, dynamic>.from(row))
           .toList()
@@ -166,26 +207,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 
   Future<void> _saveCheckin() async {
-    if (_nutritionDone && _nutritionGoal.text.trim().isEmpty) {
-      _message('Najprv zadajte cieľ pre stravovanie.');
-      return;
-    }
-    if (_trainingDone && _trainingGoal.text.trim().isEmpty) {
-      _message('Najprv zadajte cieľ pre tréning.');
-      return;
-    }
     setState(() => _saving = true);
     try {
       await _db.from('client_daily_checkins').upsert({
         'user_id': _userId,
         'checkin_date': _dateKey,
-        'nutrition_goal': _nutritionGoal.text.trim(),
-        'nutrition_completed': _nutritionDone,
-        'training_goal': _trainingGoal.text.trim(),
-        'training_completed': _trainingDone,
         'motivation': _motivation,
         'energy': _energy,
-        'mood': _mood,
+        'sleep_quality': _sleepQuality,
         'notes': _notes.text.trim(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id,checkin_date');
@@ -199,6 +228,165 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
   }
 
+  Future<void> _saveHabitCheckin(String habitId, bool completed) async {
+    if (_dateKey != _dateString(DateUtils.dateOnly(DateTime.now()))) return;
+    setState(() => _habitCheckins[habitId] = completed);
+    try {
+      await _db.from('client_habit_checkins').upsert({
+        'habit_id': habitId,
+        'user_id': _userId,
+        'checkin_date': _dateKey,
+        'completed': completed,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'habit_id,checkin_date');
+    } catch (_) {
+      if (mounted) {
+        setState(() => _habitCheckins[habitId] = !completed);
+        _message('Návyk sa nepodarilo aktualizovať. Skúste to znova.');
+      }
+    }
+  }
+
+  Future<void> _addHabit() async {
+    final title = TextEditingController();
+    var category = 'nutrition';
+    var repeatMode = 'fixed';
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Pridať cieľ alebo návyk'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: title,
+                  autofocus: true,
+                  maxLength: 120,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Čo chcete dosiahnuť?',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: category,
+                  decoration: const InputDecoration(labelText: 'Oblasť'),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'nutrition',
+                      child: Text('Stravovanie'),
+                    ),
+                    DropdownMenuItem(value: 'training', child: Text('Tréning')),
+                    DropdownMenuItem(
+                      value: 'custom',
+                      child: Text('Vlastný návyk'),
+                    ),
+                  ],
+                  onChanged: (value) => setDialogState(() => category = value!),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: repeatMode,
+                  decoration: const InputDecoration(labelText: 'Ako často?'),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'fixed',
+                      child: Text('Pevný cieľ – každý deň'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'daily',
+                      child: Text('Nová úloha pre tento deň'),
+                    ),
+                  ],
+                  onChanged: (value) =>
+                      setDialogState(() => repeatMode = value!),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Zrušiť'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (title.text.trim().isEmpty) return;
+                Navigator.pop(dialogContext, {
+                  'title': title.text.trim(),
+                  'category': category,
+                  'repeat_mode': repeatMode,
+                });
+              },
+              child: const Text('Pridať'),
+            ),
+          ],
+        ),
+      ),
+    );
+    title.dispose();
+    if (result == null) return;
+    try {
+      await _db.from('client_habits').insert({
+        'user_id': _userId,
+        'title': result['title'],
+        'category': result['category'],
+        'repeat_mode': result['repeat_mode'],
+        if (result['repeat_mode'] == 'daily') 'scheduled_for': _dateKey,
+      });
+      await _load();
+      if (mounted) _message('Cieľ bol pridaný.');
+    } catch (_) {
+      if (mounted) _message('Cieľ sa nepodarilo pridať. Skúste to znova.');
+    }
+  }
+
+  Future<void> _removeHabit(Map<String, dynamic> habit) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Odstrániť cieľ?'),
+        content: Text('„${habit['title']}“ sa odstráni aj z prehľadu návykov.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Zrušiť'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Odstrániť'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      if (habit['repeat_mode'] == 'fixed') {
+        await _db
+            .from('client_habits')
+            .update({
+              'is_active': false,
+              'ended_on': _dateString(
+                DateUtils.dateOnly(
+                  DateTime.now(),
+                ).subtract(const Duration(days: 1)),
+              ),
+            })
+            .eq('id', habit['id']);
+      } else {
+        await _db
+            .from('client_habits')
+            .update({'is_active': false})
+            .eq('id', habit['id']);
+      }
+      await _load();
+    } catch (_) {
+      if (mounted) _message('Cieľ sa nepodarilo odstrániť.');
+    }
+  }
+
   void _message(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -206,13 +394,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
-  int get _configuredGoals =>
-      (_nutritionGoal.text.trim().isNotEmpty ? 1 : 0) +
-      (_trainingGoal.text.trim().isNotEmpty ? 1 : 0);
+  int get _configuredGoals => _habits.length;
 
   int get _completedGoals =>
-      (_nutritionGoal.text.trim().isNotEmpty && _nutritionDone ? 1 : 0) +
-      (_trainingGoal.text.trim().isNotEmpty && _trainingDone ? 1 : 0);
+      _habits.where((habit) => _habitCheckins[habit['id']] == true).length;
 
   String _dateString(DateTime date) =>
       '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -238,7 +423,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           children: [
             Row(
               children: [
-                Icon(icon, color: const Color(0xFFB8F36B)),
+                Icon(icon, color: const Color(0xFF38D1BF)),
                 const SizedBox(width: 10),
                 Text(title, style: Theme.of(context).textTheme.titleLarge),
               ],
@@ -339,7 +524,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 icon: Icon(
                                   Icons.show_chart_rounded,
                                   color: _chartField == entry.key
-                                      ? const Color(0xFFB8F36B)
+                                      ? const Color(0xFF38D1BF)
                                       : null,
                                 ),
                               ),
@@ -428,41 +613,42 @@ class _ProgressScreenState extends State<ProgressScreen> {
                               ? 0
                               : _completedGoals / _configuredGoals,
                         ),
-                        const SizedBox(height: 18),
-                        TextField(
-                          controller: _nutritionGoal,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: const InputDecoration(
-                            labelText: 'Cieľ pre stravovanie',
-                            hintText: 'Napr. dodržať jedálniček',
-                            prefixIcon: Icon(Icons.restaurant_outlined),
-                          ),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Splnil(a) som cieľ stravovania'),
-                          value: _nutritionDone,
-                          onChanged: (value) =>
-                              setState(() => _nutritionDone = value),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _trainingGoal,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: const InputDecoration(
-                            labelText: 'Cieľ pre tréning',
-                            hintText: 'Napr. 30 minút pohybu',
-                            prefixIcon: Icon(Icons.fitness_center_rounded),
-                          ),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Splnil(a) som cieľ tréningu'),
-                          value: _trainingDone,
-                          onChanged: (value) =>
-                              setState(() => _trainingDone = value),
+                        const SizedBox(height: 12),
+                        if (_habits.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              'Na tento deň zatiaľ nemáte pridané ciele.',
+                            ),
+                          )
+                        else
+                          for (final habit in _habits)
+                            CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              controlAffinity: ListTileControlAffinity.leading,
+                              value:
+                                  _habitCheckins[habit['id'] as String] ??
+                                  false,
+                              title: Text(habit['title'] as String),
+                              subtitle: Text(
+                                '${_categoryLabel(habit['category'] as String)} · ${habit['repeat_mode'] == 'fixed' ? 'Pevný cieľ' : 'Úloha na tento deň'} · ${_habitHistory[habit['id']] ?? 0}/30 dní splnených',
+                              ),
+                              secondary: IconButton(
+                                tooltip: 'Ukončiť cieľ',
+                                onPressed: () => _removeHabit(habit),
+                                icon: const Icon(Icons.archive_outlined),
+                              ),
+                              onChanged: _dateKey == _dateString(today)
+                                  ? (value) => _saveHabitCheckin(
+                                      habit['id'] as String,
+                                      value ?? false,
+                                    )
+                                  : null,
+                            ),
+                        OutlinedButton.icon(
+                          onPressed: _addHabit,
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text('Pridať cieľ alebo návyk'),
                         ),
                         const Divider(height: 24),
                         _rating(
@@ -471,7 +657,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           (value) => _motivation = value,
                         ),
                         _rating('Energia', _energy, (value) => _energy = value),
-                        _rating('Nálada', _mood, (value) => _mood = value),
+                        _rating(
+                          'Kvalita spánku',
+                          _sleepQuality,
+                          (value) => _sleepQuality = value,
+                        ),
                         TextField(
                           controller: _notes,
                           minLines: 2,
@@ -502,6 +692,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
             ),
     );
   }
+
+  String _categoryLabel(String category) => switch (category) {
+    'nutrition' => 'Stravovanie',
+    'training' => 'Tréning',
+    _ => 'Vlastný návyk',
+  };
 }
 
 class _ProgressChartPainter extends CustomPainter {

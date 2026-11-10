@@ -3,7 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'food_search_screen.dart';
 import 'collaboration_screen.dart';
+import 'client_workouts_screen.dart';
 import 'profile_screen.dart';
+import 'progress_screen.dart';
 
 const mealSections = <String, String>{
   'breakfast': 'Raňajky',
@@ -216,6 +218,11 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
+  void _openDrawerScreen(Widget screen) {
+    Navigator.of(context).pop();
+    Navigator.of(context).push<void>(MaterialPageRoute(builder: (_) => screen));
+  }
+
   @override
   Widget build(BuildContext context) {
     double totalFor(double? Function(DailyFoodEntry entry) value) =>
@@ -229,6 +236,125 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
     final salt = totalFor((entry) => entry.salt);
     final today = DateUtils.dateOnly(DateTime.now());
     return Scaffold(
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF38D1BF).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF38D1BF).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Image.asset(
+                          'uploads/MOSUDA_logo.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Mosuda',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Aplikácia nielen pre trénerov',
+                            style: TextStyle(
+                              color: Color(0xFF38D1BF),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            Supabase.instance.client.auth.currentUser?.email ??
+                                'Váš účet',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF9AACA7),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFF22332F)),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+                child: Text(
+                  'MENU',
+                  style: TextStyle(
+                    color: Color(0xFF849590),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+              ListTile(
+                selected: true,
+                leading: const Icon(Icons.restaurant_menu_rounded),
+                title: const Text('Môj denník'),
+                onTap: () => Navigator.of(context).pop(),
+              ),
+              ListTile(
+                leading: const Icon(Icons.insights_rounded),
+                title: const Text('Môj pokrok'),
+                onTap: () => _openDrawerScreen(const ProgressScreen()),
+              ),
+              ListTile(
+                leading: const Icon(Icons.fitness_center_rounded),
+                title: const Text('Moje tréningy'),
+                onTap: () => _openDrawerScreen(const ClientWorkoutsScreen()),
+              ),
+              ListTile(
+                leading: const Icon(Icons.fitness_center_rounded),
+                title: const Text('Tréner a klient'),
+                onTap: () => _openDrawerScreen(const CollaborationScreen()),
+              ),
+              ListTile(
+                leading: const Icon(Icons.account_circle_outlined),
+                title: const Text('Môj profil'),
+                onTap: () => _openDrawerScreen(const ProfileScreen()),
+              ),
+              const Spacer(),
+              const Divider(height: 1, color: Color(0xFF22332F)),
+              ListTile(
+                leading: const Icon(Icons.logout_rounded),
+                title: const Text('Odhlásiť sa'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Supabase.instance.client.auth.signOut();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
       appBar: AppBar(
         toolbarHeight: 76,
         titleSpacing: 20,
@@ -238,16 +364,18 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFFB8F36B).withValues(alpha: 0.12),
+                color: const Color(0xFF38D1BF).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: const Color(0xFFB8F36B).withValues(alpha: 0.3),
+                  color: const Color(0xFF38D1BF).withValues(alpha: 0.3),
                 ),
               ),
-              child: const Icon(
-                Icons.eco_rounded,
-                color: Color(0xFFB8F36B),
-                size: 22,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: Image.asset(
+                  'uploads/MOSUDA_logo.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -256,44 +384,23 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Môj denník',
+                  'Mosuda',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                 ),
                 SizedBox(height: 3),
                 Text(
-                  'DENNÝ PREHĽAD VÝŽIVY',
+                  'APLIKÁCIA NIELEN PRE TRÉNEROV',
                   style: TextStyle(
-                    color: Color(0xFF9AA59D),
-                    fontSize: 9,
+                    color: Color(0xFF9AACA7),
+                    fontSize: 8,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Tréner a klient',
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(builder: (_) => const CollaborationScreen()),
-            ),
-            icon: const Icon(Icons.fitness_center_rounded),
-          ),
-          IconButton(
-            tooltip: 'Môj profil',
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            ),
-            icon: const Icon(Icons.account_circle_outlined),
-          ),
-          IconButton(
-            tooltip: 'Odhlásiť sa',
-            onPressed: () => Supabase.instance.client.auth.signOut(),
-            icon: const Icon(Icons.logout_rounded),
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openFoodSearch,
@@ -364,7 +471,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                     child: Text(
                       section.value.toUpperCase(),
                       style: const TextStyle(
-                        color: Color(0xFFB8F36B),
+                        color: Color(0xFF38D1BF),
                         fontWeight: FontWeight.w800,
                         fontSize: 12,
                         letterSpacing: 0.5,
@@ -377,7 +484,7 @@ class _FoodHomeScreenState extends State<FoodHomeScreen> {
                       child: Text(
                         'Zatiaľ bez jedál',
                         style: TextStyle(
-                          color: Color(0xFF7E8981),
+                          color: Color(0xFF849590),
                           fontSize: 12,
                         ),
                       ),
@@ -417,9 +524,9 @@ class _DateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     decoration: BoxDecoration(
-      color: const Color(0xFF141815),
+      color: const Color(0xFF111A18),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFF252C27)),
+      border: Border.all(color: const Color(0xFF22332F)),
     ),
     child: Row(
       children: [
@@ -477,9 +584,9 @@ class _CaloriesCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: const Color(0xFF1B241B),
+      color: const Color(0xFF142421),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFF2A3529)),
+      border: Border.all(color: const Color(0xFF2B4842)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,9 +639,9 @@ class _NutrientChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     decoration: BoxDecoration(
-      color: const Color(0xFF141815),
+      color: const Color(0xFF111A18),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0xFF2A3529)),
+      border: Border.all(color: const Color(0xFF2B4842)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,7 +649,7 @@ class _NutrientChip extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(color: Color(0xFF9AA59D), fontSize: 11),
+          style: const TextStyle(color: Color(0xFF9AACA7), fontSize: 11),
         ),
         const SizedBox(height: 2),
         Text(
@@ -563,14 +670,14 @@ class _EmptyCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFF141815),
-      border: Border.all(color: const Color(0xFF252C27)),
+      color: const Color(0xFF111A18),
+      border: Border.all(color: const Color(0xFF22332F)),
       borderRadius: BorderRadius.circular(14),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(message, style: const TextStyle(color: Color(0xFF9AA59D))),
+        Text(message, style: const TextStyle(color: Color(0xFF9AACA7))),
         if (action != null) action!,
       ],
     ),
@@ -589,8 +696,8 @@ class _FoodTile extends StatelessWidget {
       dense: true,
       leading: const CircleAvatar(
         radius: 17,
-        backgroundColor: Color(0xFF202820),
-        foregroundColor: Color(0xFFB8F36B),
+        backgroundColor: Color(0xFF142421),
+        foregroundColor: Color(0xFF38D1BF),
         child: Icon(Icons.eco_outlined, size: 18),
       ),
       title: Text(
@@ -608,7 +715,7 @@ class _FoodTile extends StatelessWidget {
         'soľ ${_amount(entry.salt, 'g')}',
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: Color(0xFF929E95), fontSize: 11),
+        style: const TextStyle(color: Color(0xFF9AACA7), fontSize: 11),
       ),
       trailing: trailing,
     ),

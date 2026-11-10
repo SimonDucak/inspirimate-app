@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Potravinový denník',
+    title: 'Mosuda',
     debugShowCheckedModeBanner: false,
     locale: const Locale('sk'),
     supportedLocales: const [Locale('sk')],
@@ -29,57 +29,79 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       colorScheme:
           ColorScheme.fromSeed(
-            seedColor: const Color(0xFFB8F36B),
+            seedColor: const Color(0xFF38D1BF),
             brightness: Brightness.dark,
-            surface: const Color(0xFF141815),
+            surface: const Color(0xFF111A18),
           ).copyWith(
-            primary: const Color(0xFFB8F36B),
-            onPrimary: const Color(0xFF17200F),
-            secondary: const Color(0xFF8EDCC2),
-            surface: const Color(0xFF141815),
-            onSurface: const Color(0xFFE9EEE9),
-            outline: const Color(0xFF303832),
+            primary: const Color(0xFF38D1BF),
+            onPrimary: const Color(0xFF061A18),
+            secondary: const Color(0xFF8FE8DB),
+            surface: const Color(0xFF111A18),
+            onSurface: const Color(0xFFE8F1EF),
+            outline: const Color(0xFF30413D),
           ),
-      scaffoldBackgroundColor: const Color(0xFF0B0E0C),
+      scaffoldBackgroundColor: const Color(0xFF080D0C),
+      fontFamily: 'sans-serif',
+      textTheme: const TextTheme(
+        headlineSmall: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+        ),
+        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        bodyLarge: TextStyle(fontSize: 15, height: 1.45),
+        bodyMedium: TextStyle(fontSize: 14, height: 1.4),
+      ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF0B0E0C),
-        foregroundColor: Color(0xFFE9EEE9),
+        backgroundColor: Color(0xFF080D0C),
+        foregroundColor: Color(0xFFE8F1EF),
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          color: Color(0xFFE9EEE9),
-          fontSize: 17,
+          color: Color(0xFFE8F1EF),
+          fontSize: 18,
           fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
         ),
       ),
       cardTheme: CardThemeData(
-        color: const Color(0xFF141815),
+        color: const Color(0xFF111A18),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: Color(0xFF252C27)),
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: Color(0xFF22332F)),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF141815),
-        hintStyle: const TextStyle(color: Color(0xFF7E8981), fontSize: 14),
-        prefixIconColor: const Color(0xFF8D9990),
+        fillColor: const Color(0xFF111A18),
+        hintStyle: const TextStyle(color: Color(0xFF849590), fontSize: 14),
+        prefixIconColor: const Color(0xFF9AACA7),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 12,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF303832)),
+          borderSide: const BorderSide(color: Color(0xFF30413D)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF252C27)),
+          borderSide: const BorderSide(color: Color(0xFF22332F)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFB8F36B), width: 1.3),
+          borderSide: const BorderSide(color: Color(0xFF38D1BF), width: 1.5),
         ),
       ),
     ),

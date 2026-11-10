@@ -9,7 +9,8 @@ class TrainerProfileEditorScreen extends StatefulWidget {
       _TrainerProfileEditorScreenState();
 }
 
-class _TrainerProfileEditorScreenState extends State<TrainerProfileEditorScreen> {
+class _TrainerProfileEditorScreenState
+    extends State<TrainerProfileEditorScreen> {
   final _formKey = GlobalKey<FormState>();
   final _headline = TextEditingController();
   final _bio = TextEditingController();
@@ -117,9 +118,11 @@ class _TrainerProfileEditorScreenState extends State<TrainerProfileEditorScreen>
                             maxLength: 120,
                             decoration: const InputDecoration(
                               labelText: 'Titulok',
-                              hintText: 'Napríklad osobný tréner a výživový poradca',
+                              hintText:
+                                  'Napríklad osobný tréner a výživový poradca',
                             ),
-                            validator: (value) => _bounded(value, 120, 'Titulok'),
+                            validator: (value) =>
+                                _bounded(value, 120, 'Titulok'),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
@@ -127,8 +130,11 @@ class _TrainerProfileEditorScreenState extends State<TrainerProfileEditorScreen>
                             minLines: 4,
                             maxLines: 8,
                             maxLength: 2000,
-                            decoration: const InputDecoration(labelText: 'O mne'),
-                            validator: (value) => _bounded(value, 2000, 'O mne'),
+                            decoration: const InputDecoration(
+                              labelText: 'O mne',
+                            ),
+                            validator: (value) =>
+                                _bounded(value, 2000, 'O mne'),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
@@ -139,7 +145,8 @@ class _TrainerProfileEditorScreenState extends State<TrainerProfileEditorScreen>
                               hintText: 'Silový tréning, mobilita, kondícia',
                               helperText: 'Zadajte oblasti oddelené čiarkami.',
                             ),
-                            validator: (value) => _bounded(value, 300, 'Zameranie'),
+                            validator: (value) =>
+                                _bounded(value, 300, 'Zameranie'),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
@@ -149,7 +156,8 @@ class _TrainerProfileEditorScreenState extends State<TrainerProfileEditorScreen>
                               labelText: 'Roky praxe (nepovinné)',
                             ),
                             validator: (value) {
-                              if (value == null || value.trim().isEmpty) return null;
+                              if (value == null || value.trim().isEmpty)
+                                return null;
                               final years = int.tryParse(value.trim());
                               return years == null || years < 0 || years > 80
                                   ? 'Zadajte celé číslo od 0 do 80.'
@@ -164,7 +172,9 @@ class _TrainerProfileEditorScreenState extends State<TrainerProfileEditorScreen>
                               icon: _saving
                                   ? const SizedBox.square(
                                       dimension: 18,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : const Icon(Icons.save_rounded),
                               label: const Text('Uložiť profil'),
@@ -190,7 +200,8 @@ class PublicTrainerProfileScreen extends StatefulWidget {
       _PublicTrainerProfileScreenState();
 }
 
-class _PublicTrainerProfileScreenState extends State<PublicTrainerProfileScreen> {
+class _PublicTrainerProfileScreenState
+    extends State<PublicTrainerProfileScreen> {
   Map<String, dynamic>? _profile;
   bool _loading = true;
   String? _error;
@@ -213,9 +224,11 @@ class _PublicTrainerProfileScreenState extends State<PublicTrainerProfileScreen>
       );
       final rows = response is List ? response : const [];
       if (rows.isEmpty) throw StateError('Profile not found');
-      if (mounted) setState(() => _profile = Map<String, dynamic>.from(rows.first as Map));
+      if (mounted)
+        setState(() => _profile = Map<String, dynamic>.from(rows.first as Map));
     } catch (_) {
-      if (mounted) setState(() => _error = 'Profil trénera sa nepodarilo načítať.');
+      if (mounted)
+        setState(() => _error = 'Profil trénera sa nepodarilo načítať.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -239,7 +252,8 @@ class _PublicTrainerProfileScreenState extends State<PublicTrainerProfileScreen>
   );
 
   Widget _content(Map<String, dynamic> profile) {
-    final name = '${profile['first_name'] ?? ''} ${profile['last_name'] ?? ''}'.trim();
+    final name = '${profile['first_name'] ?? ''} ${profile['last_name'] ?? ''}'
+        .trim();
     final specialties = (profile['specialties'] as List? ?? []).cast<Object?>();
     final testimonials = (profile['testimonials'] as List? ?? [])
         .whereType<Map>()
@@ -259,16 +273,23 @@ class _PublicTrainerProfileScreenState extends State<PublicTrainerProfileScreen>
                   child: Text(name.isEmpty ? 'T' : name.characters.first),
                 ),
                 const SizedBox(height: 14),
-                Text(name.isEmpty ? 'Tréner' : name,
-                    style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  name.isEmpty ? 'Tréner' : name,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 6),
-                Text(profile['headline'] as String? ?? '',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  profile['headline'] as String? ?? '',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 12),
                 Text(profile['bio'] as String? ?? ''),
                 if (specialties.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  const Text('ZAMERANIE', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'ZAMERANIE',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -283,10 +304,19 @@ class _PublicTrainerProfileScreenState extends State<PublicTrainerProfileScreen>
                   spacing: 16,
                   runSpacing: 8,
                   children: [
-                    _Stat(label: 'Klienti', value: '${profile['active_clients'] ?? 0}'),
-                    _Stat(label: 'Dokončené tréningy', value: '${profile['completed_sessions'] ?? 0}'),
+                    _Stat(
+                      label: 'Klienti',
+                      value: '${profile['active_clients'] ?? 0}',
+                    ),
+                    _Stat(
+                      label: 'Dokončené tréningy',
+                      value: '${profile['completed_sessions'] ?? 0}',
+                    ),
                     if (profile['years_experience'] != null)
-                      _Stat(label: 'Roky praxe', value: '${profile['years_experience']}'),
+                      _Stat(
+                        label: 'Roky praxe',
+                        value: '${profile['years_experience']}',
+                      ),
                   ],
                 ),
               ],
@@ -294,33 +324,56 @@ class _PublicTrainerProfileScreenState extends State<PublicTrainerProfileScreen>
           ),
         ),
         const SizedBox(height: 20),
-        Text('HODNOTENIA KLIENTOV (${testimonials.length})',
-            style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: .5)),
+        Text(
+          'HODNOTENIA KLIENTOV (${testimonials.length})',
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            letterSpacing: .5,
+          ),
+        ),
         const SizedBox(height: 8),
         if (testimonials.isEmpty)
-          const Card(child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Tréner zatiaľ nemá zverejnené hodnotenia.'),
-          )),
-        ...testimonials.map((testimonial) => Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  const CircleAvatar(child: Icon(Icons.person_outline_rounded)),
-                  const SizedBox(width: 10),
-                  const Expanded(child: Text('Klient', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Text('★ ${testimonial['rating']}/5',
-                      style: const TextStyle(color: Color(0xFFB8F36B), fontWeight: FontWeight.bold)),
-                ]),
-                const SizedBox(height: 12),
-                Text(testimonial['body'] as String? ?? ''),
-              ],
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Tréner zatiaľ nemá zverejnené hodnotenia.'),
             ),
           ),
-        )),
+        ...testimonials.map(
+          (testimonial) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        child: Icon(Icons.person_outline_rounded),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Klient',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Text(
+                        '★ ${testimonial['rating']}/5',
+                        style: const TextStyle(
+                          color: Color(0xFF38D1BF),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(testimonial['body'] as String? ?? ''),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -335,7 +388,12 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+      Text(
+        value,
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+      ),
       Text(label, style: Theme.of(context).textTheme.bodySmall),
     ],
   );

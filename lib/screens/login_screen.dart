@@ -92,33 +92,55 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Center(
                     child: Container(
-                      width: 58,
-                      height: 58,
+                      width: 196,
+                      height: 164,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF202820),
-                        borderRadius: BorderRadius.circular(18),
+                        color: const Color(0xFF000000),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: const Color(0xFF22332F)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x2638D1BF),
+                            blurRadius: 34,
+                            spreadRadius: -8,
+                          ),
+                        ],
                       ),
-                      child: const Icon(
-                        Icons.eco_rounded,
-                        color: Color(0xFFB8F36B),
-                        size: 30,
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.asset(
+                        'uploads/MOSUDA_logo.png',
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 20),
                   const Text(
-                    'Potravinový denník',
+                    'Mosuda',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                   const SizedBox(height: 8),
+                  const Text(
+                    'Aplikácia nielen pre trénerov',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF38D1BF),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Text(
                     registering
                         ? 'Vytvorte si účet a začnite sledovať svoje jedlá.'
                         : 'Prihláste sa a pokračujte vo svojom denníku.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Color(0xFF9AA59D),
+                      color: Color(0xFF9AACA7),
                       fontSize: 14,
                     ),
                   ),
@@ -268,7 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF9AA59D),
+                        color: const Color(0xFF9AACA7),
                       ),
                     ),
                   ],
@@ -280,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     : Icons.radio_button_unchecked_rounded,
                 color: selected
                     ? Theme.of(context).colorScheme.primary
-                    : const Color(0xFF7E8981),
+                    : const Color(0xFF849590),
               ),
             ],
           ),

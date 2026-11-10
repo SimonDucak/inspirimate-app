@@ -64,16 +64,28 @@ build_web() {
   flutter build web --release --pwa-strategy=none
 }
 
+# A failed build must not leave the waiting page in place. Drop both the
+# served preview and the web output so the next workspace start builds again
+# instead of serving building.html or republishing a half-written build.
+fail_build() {
+  rm -rf preview build/web
+  exit 1
+}
+
+run_build() {
+  show_building_page
+  build_web || fail_build
+  publish || fail_build
+}
+
 case "${1:-serve}" in
   build)
-    show_building_page
-    build_web
-    publish
+    run_build
     ;;
   serve)
     if [ ! -f preview/flutter_bootstrap.js ]; then
       if [ -f build/web/index.html ]; then
-        publish
+        publish || fail_build
       else
         show_building_page
         python3 -c '
@@ -88,8 +100,8 @@ ThreadingHTTPServer(("0.0.0.0", 3000), Handler).serve_forever()
 ' preview &
         server_pid=$!
         trap 'kill "$server_pid" 2>/dev/null || true' EXIT INT TERM
-        build_web
-        publish
+        build_web || fail_build
+        publish || fail_build
         wait "$server_pid"
         exit
       fi

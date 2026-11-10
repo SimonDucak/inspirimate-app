@@ -331,8 +331,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               dense: true,
               leading: const CircleAvatar(
                 radius: 17,
-                backgroundColor: Color(0xFF202820),
-                foregroundColor: Color(0xFFB8F36B),
+                backgroundColor: Color(0xFF142421),
+                foregroundColor: Color(0xFF38D1BF),
                 child: Icon(Icons.eco_outlined, size: 18),
               ),
               title: Text(
@@ -343,7 +343,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                 _nutrition(food),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF929E95), fontSize: 11),
+                style: const TextStyle(color: Color(0xFF9AACA7), fontSize: 11),
               ),
               trailing: alreadyAdded
                   ? const Icon(Icons.check_circle_outline_rounded)
@@ -385,12 +385,12 @@ class _SearchHint extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 40, color: const Color(0xFF7E8981)),
+          Icon(icon, size: 40, color: const Color(0xFF849590)),
           const SizedBox(height: 12),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFF9AA59D)),
+            style: const TextStyle(color: Color(0xFF9AACA7)),
           ),
           if (action != null) ...[const SizedBox(height: 16), action!],
         ],
